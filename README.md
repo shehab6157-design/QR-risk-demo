@@ -1,3 +1,4 @@
+![QR Risk Signal demo preview](qr-risk-banner.png)
 # QR Risk Signal — Live Demo
 
 A content-based risk-scoring engine for detecting **quishing** (QR-code phishing) — built as a working prototype to demonstrate a fraud-detection signal that could plug into a bank, fintech, or payment platform's existing risk stack.

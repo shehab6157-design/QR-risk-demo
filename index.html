@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QR Risk Signal — Live Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1720;
+    --panel:#172233;
+    --panel-raised:#1D2B40;
+    --line:#2A3B52;
+    --text:#E7ECF3;
+    --muted:#8895A7;
+    --safe:#7DD3B0;
+    --suspicious:#F2B84B;
+    --danger:#F0625B;
+    --accent:#6EA8FE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--text);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:56px 24px 80px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--accent);
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-size:12px;
+    margin-bottom:14px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,42px);
+    line-height:1.1;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--muted);font-size:16px;line-height:1.6;max-width:620px;margin-bottom:40px;}
+
+  .console{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:28px;
+    margin-bottom:28px;
+  }
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  input[type=text]{
+    flex:1;min-width:240px;
+    background:var(--ink);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    padding:12px 14px;
+    border-radius:8px;
+    outline:none;
+  }
+  input[type=text]:focus{border-color:var(--accent);}
+  button.primary{
+    background:var(--accent);
+    color:#0B1220;
+    border:none;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:12px 22px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  button.primary:hover{opacity:.9;}
+  label.small{
+    font-size:12px;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+    display:block;margin-bottom:6px;
+  }
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 4px;}
+  .chip{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    padding:7px 12px;
+    border-radius:100px;
+    border:1px solid var(--line);
+    color:var(--muted);
+    cursor:pointer;
+    background:transparent;
+  }
+  .chip:hover{border-color:var(--accent);color:var(--text);}
+  .chip.mal{border-color:rgba(240,98,91,.4);}
+  .chip.safe{border-color:rgba(125,211,176,.4);}
+
+  .log{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    line-height:1.9;
+    color:var(--muted);
+    min-height:24px;
+    margin-top:20px;
+  }
+  .log .ok{color:var(--muted);}
+  .log .flag{color:var(--suspicious);}
+  .log .idx{color:var(--accent);opacity:.7;margin-right:8px;}
+
+  .verdict-card{
+    display:none;
+    margin-top:24px;
+    border-top:1px solid var(--line);
+    padding-top:24px;
+  }
+  .verdict-top{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:18px;}
+  .gauge{position:relative;width:120px;height:70px;flex:none;}
+  .gauge svg{width:100%;height:100%;}
+  .gauge-label{
+    position:absolute;bottom:0;left:0;right:0;text-align:center;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;
+  }
+  .verdict-text{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin-bottom:4px;}
+  .verdict-sub{color:var(--muted);font-size:13px;}
+  .reasons{list-style:none;margin:0;padding:0;}
+  .reasons li{
+    font-size:14px;
+    padding:10px 0;
+    border-top:1px solid var(--line);
+    display:flex;gap:10px;
+  }
+  .reasons li:first-child{border-top:none;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--suspicious);margin-top:7px;flex:none;}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:44px 0;}
+  .stat{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px;
+  }
+  .stat .num{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:var(--accent);}
+  .stat .lbl{color:var(--muted);font-size:12.5px;margin-top:6px;line-height:1.5;}
+
+  .section-title{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.06em;
+    margin:48px 0 16px;
+  }
+  .positioning{
+    background:var(--panel-raised);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:26px;
+    font-size:15px;
+    line-height:1.7;
+    color:var(--text);
+  }
+  .positioning b{color:var(--accent);}
+  footer{margin-top:48px;color:var(--muted);font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">QR Risk Signal — content-based quishing detection, live demo</div>
+  <h1>Test any QR destination against a real fraud-signal engine.</h1>
+  <p class="sub">Paste a URL (as if just decoded from a QR code) and optional surrounding text. This runs entirely in your browser using the same heuristics as the scoring engine — no data leaves this page.</p>
+
+  <div class="console">
+    <label class="small">DECODED QR URL</label>
+    <div class="row">
+      <input type="text" id="urlInput" placeholder="https://example.com/pay" value="http://bankhapo1im-secure.com/verify">
+    </div>
+    <label class="small">ACCOMPANYING TEXT (optional — SMS body, sticker caption, etc.)</label>
+    <div class="row">
+      <input type="text" id="textInput" placeholder="e.g. Your account will be suspended. Verify now." value="Your account will be suspended. Verify now.">
+      <button class="primary" onclick="runAnalysis()">Analyze</button>
+    </div>
+    <div class="chips">
+      <button class="chip safe" onclick="loadCase('https://pay.pango.co.il/zone/4471','')">parking payment (safe)</button>
+      <button class="chip safe" onclick="loadCase('https://menu.golansteakhouse.co.il/table12','')">restaurant menu (safe)</button>
+      <button class="chip mal" onclick="loadCase('http://parking-fine-pay.top/ticket','Unpaid parking fine. Click immediately to avoid penalty.')">fake parking fine (malicious)</button>
+      <button class="chip mal" onclick="loadCase('http://192.168.77.14/secure-login','Confirm your identity')">IP-address link (malicious)</button>
+      <button class="chip mal" onclick="loadCase('http://bit.ly/3xQpay','Claim your refund now')">shortened link (malicious)</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <div class="verdict-card" id="verdictCard">
+      <div class="verdict-top">
+        <div class="gauge"><svg viewBox="0 0 120 70" id="gaugeSvg"></svg><div class="gauge-label" id="gaugeLabel">0</div></div>
+        <div>
+          <div class="verdict-text" id="verdictText">—</div>
+          <div class="verdict-sub" id="verdictSub">risk score out of 100</div>
+        </div>
+      </div>
+      <ul class="reasons" id="reasonsList"></ul>
+    </div>
+  </div>
+
+  <div class="section-title">Why this matters right now</div>
+  <div class="stats">
+    <div class="stat"><div class="num">12%</div><div class="lbl">of all phishing attacks in 2025 used a QR code, up from 0.8% in 2021</div></div>
+    <div class="stat"><div class="num">73%</div><div class="lbl">of people scan a QR code without checking where it leads</div></div>
+    <div class="stat"><div class="num">587%</div><div class="lbl">rise in QR-phishing reports, UK, 2023 → 2025</div></div>
+    <div class="stat"><div class="num">42%</div><div class="lbl">of Israelis report being targeted by scams or phishing</div></div>
+  </div>
+
+  <div class="section-title">Positioning</div>
+  <div class="positioning">
+    This is a <b>content-based risk signal</b>, designed to plug into an existing fraud stack — not replace it. It runs on the decoded QR payload alone (domain structure, typosquat similarity, entropy, accompanying text) with <b>no live network calls required</b>, so it can sit inline in a scan-to-pay or QR check-in flow with near-zero latency. A production integration would add live threat-intel feeds and transaction-context signals (new payee, unusual amount, first-time scan location) on top of this layer, in partnership with a bank or fintech's existing risk data.
+  </div>
+
+  <footer>Prototype demo — content-only heuristics, not yet trained on confirmed fraud/legit labels from a live production dataset.</footer>
+</div>
+
+<script>
+const KNOWN_BRANDS = [
+  {name:"Bank Hapoalim", domain:"bankhapoalim.co.il"},
+  {name:"Bank Leumi", domain:"leumi.co.il"},
+  {name:"Israel Discount Bank", domain:"discountbank.co.il"},
+  {name:"Mizrahi Tefahot Bank", domain:"mizrahi-tefahot.co.il"},
+  {name:"Isracard", domain:"isracard.co.il"},
+  {name:"PayPal", domain:"paypal.com"},
+  {name:"Visa", domain:"visa.com"},
+  {name:"Mastercard", domain:"mastercard.com"}
+];
+const URL_SHORTENERS = new Set(["bit.ly","tinyurl.com","t.co","goo.gl","ow.ly","is.gd","buff.ly","rebrand.ly","shorturl.at","cutt.ly"]);
+const SUSPICIOUS_TLDS = [".tk",".top",".zip",".xyz",".gq",".ml",".cf",".work",".click"];
+const URGENCY_KEYWORDS = ["verify your account","account suspended","urgent action required","confirm your identity","payment failed","your account will be locked","click immediately","limited time","verify now","security alert","unusual activity detected","update your payment","claim your refund"];
+
+const WEIGHTS = {is_ip_literal:30, is_url_shortener:20, suspicious_tld:15, no_https:10, excessive_subdomains:12, high_entropy_domain:15, likely_typosquat:35, has_urgency_language:20, excessive_hyphens:10};
+const REASON_TEXT = {
+  is_ip_literal:"Destination is a raw IP address rather than a domain name",
+  is_url_shortener:"Uses a URL shortener, hiding the real destination",
+  suspicious_tld:"Uses a domain ending commonly abused for disposable phishing sites",
+  no_https:"Connection is not encrypted (no HTTPS)",
+  excessive_subdomains:"Unusually deep subdomain structure, often used to mimic a trusted brand",
+  high_entropy_domain:"Domain name looks randomly generated",
+  likely_typosquat:"Domain closely resembles a known brand ({brand}) but does not match exactly",
+  has_urgency_language:"Accompanying text uses urgency/pressure phrasing: {keywords}",
+  excessive_hyphens:"Domain contains multiple hyphens, a common phishing-kit pattern"
+};
+
+function levenshtein(a,b){
+  if(a===b) return 0;
+  let prev = Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){
+    const curr=[i];
+    for(let j=1;j<=b.length;j++){
+      const cost = a[i-1]===b[j-1]?0:1;
+      curr[j]=Math.min(prev[j]+1, curr[j-1]+1, prev[j-1]+cost);
+    }
+    prev=curr;
+  }
+  return prev[b.length];
+}
+function shannonEntropy(s){
+  if(!s) return 0;
+  const counts={};
+  for(const ch of s) counts[ch]=(counts[ch]||0)+1;
+  let entropy=0;
+  for(const c of Object.values(counts)){
+    const p=c/s.length;
+    entropy -= p*Math.log2(p);
+  }
+  return entropy;
+}
+function closestBrandMatch(domainBody){
+  let best=null, bestDist=99, bestRatio=1.0;
+  for(const brand of KNOWN_BRANDS){
+    const core = brand.domain.split(".")[0];
+    const n = core.length;
+    let bestLocal;
+    if(domainBody.length <= n){
+      bestLocal = levenshtein(domainBody, core);
+    } else {
+      bestLocal = 99;
+      for(const size of [n-1,n,n+1]){
+        if(size<=0) continue;
+        for(let start=0; start<=domainBody.length-size; start++){
+          const window = domainBody.slice(start,start+size);
+          bestLocal = Math.min(bestLocal, levenshtein(window, core));
+        }
+      }
+    }
+    const ratio = bestLocal/n;
+    if(ratio < bestRatio){ bestRatio=ratio; bestDist=bestLocal; best=brand; }
+  }
+  return {brand:best, dist:bestDist, ratio:Math.round(bestRatio*100)/100};
+}
+function extractFeatures(payloadUrl, labelText){
+  let parsed;
+  try{ parsed = new URL(payloadUrl.includes("://")?payloadUrl:"http://"+payloadUrl); }
+  catch(e){ parsed = new URL("http://invalid.example"); }
+  const host = parsed.host.toLowerCase().split(":")[0];
+  const domainBody = host.split(".")[0] || "";
+  const f = {};
+  f.is_ip_literal = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+  f.is_url_shortener = URL_SHORTENERS.has(host);
+  f.suspicious_tld = SUSPICIOUS_TLDS.some(tld => host.endsWith(tld));
+  f.no_https = parsed.protocol !== "https:";
+  f.subdomain_count = Math.max((host.match(/\./g)||[]).length - 1, 0);
+  f.excessive_subdomains = f.subdomain_count >= 3;
+  f.domain_entropy = Math.round(shannonEntropy(domainBody)*100)/100;
+  f.high_entropy_domain = f.domain_entropy > 3.6 && domainBody.length > 8;
+  const match = closestBrandMatch(domainBody);
+  f.closest_known_brand = match.brand ? match.brand.name : null;
+  f.brand_edit_distance = match.dist;
+  f.brand_edit_ratio = match.ratio;
+  f.likely_typosquat = match.dist > 0 && match.ratio <= 0.3;
+  const textLower = (labelText||"").toLowerCase();
+  f.urgency_keywords_found = URGENCY_KEYWORDS.filter(k => textLower.includes(k));
+  f.has_urgency_language = f.urgency_keywords_found.length > 0;
+  f.hyphen_count = (domainBody.match(/-/g)||[]).length;
+  f.excessive_hyphens = f.hyphen_count >= 2;
+  f.raw_host = host;
+  return f;
+}
+function scoreQr(url, text){
+  const f = extractFeatures(url, text);
+  let total=0; const reasons=[]; const checklog=[];
+  for(const key in WEIGHTS){
+    const triggered = !!f[key];
+    checklog.push({key, triggered});
+    if(triggered){
+      total += WEIGHTS[key];
+      let reason = REASON_TEXT[key];
+      if(reason.includes("{brand}")) reason = reason.replace("{brand}", f.closest_known_brand);
+      if(reason.includes("{keywords}")) reason = reason.replace("{keywords}", f.urgency_keywords_found.join(", "));
+      reasons.push(reason);
+    }
+  }
+  total = Math.min(total,100);
+  let verdict = total>=60 ? "HIGH RISK" : total>=30 ? "SUSPICIOUS" : "LIKELY SAFE";
+  return {total, verdict, reasons, checklog, features:f};
+}
+
+const CHECK_LABELS = {
+  is_ip_literal:"checking for raw IP address host",
+  is_url_shortener:"checking against known URL-shortener list",
+  suspicious_tld:"checking domain ending against high-abuse TLD list",
+  no_https:"checking for HTTPS encryption",
+  excessive_subdomains:"checking subdomain depth",
+  high_entropy_domain:"checking domain string randomness",
+  likely_typosquat:"comparing domain against known brand list",
+  has_urgency_language:"scanning accompanying text for pressure language",
+  excessive_hyphens:"checking hyphen pattern in domain"
+};
+
+function loadCase(url, text){
+  document.getElementById("urlInput").value = url;
+  document.getElementById("textInput").value = text;
+  runAnalysis();
+}
+
+async function runAnalysis(){
+  const url = document.getElementById("urlInput").value.trim();
+  const text = document.getElementById("textInput").value.trim();
+  const logEl = document.getElementById("log");
+  const cardEl = document.getElementById("verdictCard");
+  cardEl.style.display="none";
+  logEl.innerHTML="";
+  if(!url) return;
+
+  const result = scoreQr(url, text);
+  const keys = Object.keys(WEIGHTS);
+  for(let i=0;i<keys.length;i++){
+    await new Promise(r=>setTimeout(r,90));
+    const key = keys[i];
+    const triggered = result.checklog.find(c=>c.key===key).triggered;
+    const line = document.createElement("div");
+    line.innerHTML = `<span class="idx">0${i+1}</span><span class="${triggered?'flag':'ok'}">${CHECK_LABELS[key]}${triggered?' — flagged':' — clear'}</span>`;
+    logEl.appendChild(line);
+  }
+  await new Promise(r=>setTimeout(r,150));
+  showVerdict(result);
+}
+
+function showVerdict(result){
+  const cardEl = document.getElementById("verdictCard");
+  const verdictText = document.getElementById("verdictText");
+  const verdictSub = document.getElementById("verdictSub");
+  const reasonsList = document.getElementById("reasonsList");
+  const gaugeLabel = document.getElementById("gaugeLabel");
+  const gaugeSvg = document.getElementById("gaugeSvg");
+
+  const color = result.verdict==="HIGH RISK" ? "var(--danger)" : result.verdict==="SUSPICIOUS" ? "var(--suspicious)" : "var(--safe)";
+  verdictText.textContent = result.verdict;
+  verdictText.style.color = color;
+  verdictSub.textContent = "risk score out of 100";
+  gaugeLabel.textContent = result.total;
+  gaugeLabel.style.color = color;
+
+  const pct = result.total/100;
+  const angle = Math.PI * pct;
+  const x = 60 - 50*Math.cos(angle);
+  const y = 60 - 50*Math.sin(angle);
+  gaugeSvg.innerHTML = `
+    <path d="M10,60 A50,50 0 0,1 110,60" fill="none" stroke="#2A3B52" stroke-width="10" stroke-linecap="round"/>
+    <path d="M10,60 A50,50 0 0,1 ${x},${y}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>
+  `;
+
+  reasonsList.innerHTML = "";
+  if(result.reasons.length===0){
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="dot" style="background:var(--safe)"></span> No risk signals triggered on this content.`;
+    reasonsList.appendChild(li);
+  } else {
+    for(const r of result.reasons){
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="dot"></span> ${r}`;
+      reasonsList.appendChild(li);
+    }
+  }
+  cardEl.style.display = "block";
+}
+
+window.addEventListener("load", runAnalysis);
+</script>
+</body>
+</html>

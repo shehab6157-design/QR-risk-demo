@@ -33,4 +33,4 @@ This is a working prototype: 100% accuracy on a 12-case hand-built test set cove
 
 ## Interested in piloting this?
 
-Reach out via [LinkedIn](https://www.linkedin.com/in/shehab-shibli-a383b5231) — looking for a bank or fintech design partner to validate this against real (anonymized) transaction patterns.
+Reach out via [LinkedIn](https://www.linkedin.com/in/shehab-shibli) — looking for a bank or fintech design partner to validate this against real (anonymized) transaction patterns.
